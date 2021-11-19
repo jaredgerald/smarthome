@@ -5,20 +5,58 @@ import configparser
 import time
 
 
+stripe_status = "off"
+stripe_mode = "static"
+stripe_speed = 100
+stripe_brightness = 80
+stripe_red = 0
+stripe_blue = 0
+stripe_green = 0
+
+
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
 
-    for topic in args.topics:
-        client.subscribe(topic)
+    client.subscribe(LIGHT_STATUS_TOPIC)
+    client.subscribe(LIGHT_MODE_TOPIC)
+    client.subscribe(LIGHT_SPEED_TOPIC)
+    client.subscribe(LIGHT_BRIGHTNESS_TOPIC)
+    client.subscribe(LIGHT_COLOR_RED_TOPIC)
+    client.subscribe(LIGHT_COLOR_BLUE_TOPIC)
+    client.subscribe(LIGHT_COLOR_GREEN_TOPIC)
 
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
-    # code to call lightstripe here
+    payload = str(msg.payload)
 
+    if msg.topic is LIGHT_STATUS_TOPIC:
+        global stripe_status
+        stripe_status = payload
+    elif msg.topic is LIGHT_MODE_TOPIC:
+        global stripe_mode
+        stripe_mode = payload
+    elif msg.topic is LIGHT_SPEED_TOPIC:
+        global stripe_speed
+        stripe_speed = payload
+    elif msg.topic is LIGHT_BRIGHTNESS_TOPIC:
+        global stripe_brightness
+        stripe_brightness = payload
+    elif msg.topic is LIGHT_COLOR_RED_TOPIC:
+        global stripe_red
+        stripe_red = payload
+    elif msg.topic is LIGHT_COLOR_BLUE_TOPIC:
+        global stripe_blue
+        stripe_blue = payload
+    elif msg.topic is LIGHT_COLOR_GREEN_TOPIC:
+        global stripe_green
+        stripe_green = payload
+
+
+# ----------------------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------------------------------
 
@@ -55,10 +93,10 @@ def wheel(pos):
 
 # Process arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--username', action='store', dest='username', help='The mqtt username.')
-parser.add_argument('-P', '--password', action='store', dest='password', help='The mqtt password.')
-parser.add_argument('-t', '--topics', nargs='+', help='<Required> Subscribe to topics', required=True)
-#parser.add_argument('-c', '--config', action='store', default='', dest='config', help='The light strip config')
+parser.add_argument('-u', '--username', action='store', dest='username', help='The mqtt username.', required=True)
+parser.add_argument('-P', '--password', action='store', dest='password', help='The mqtt password.', required=True)
+parser.add_argument('-i', '--id', type=int, action='store', help='<Required> Subscribe to topics', required=True)
+# parser.add_argument('-c', '--config', action='store', default='', dest='config', help='The light strip config')
 args = parser.parse_args()
 
 # ----------------------------------------------------------------------------------------------------------
@@ -79,9 +117,19 @@ LED_CHANNEL = int(config.get(led_strip_configuration_name, 'led_channel'))
 
 # ----------------------------------------------------------------------------------------------------------
 
+LIGHT_STATUS_TOPIC = f"light/{args.id}/status"
+LIGHT_MODE_TOPIC = f"light/{args.id}/mode"
+LIGHT_SPEED_TOPIC = f"light/{args.id}/speed"
+LIGHT_BRIGHTNESS_TOPIC = f"light/{args.id}/brightness"
+LIGHT_COLOR_RED_TOPIC = f"light/{args.id}/color/red"
+LIGHT_COLOR_BLUE_TOPIC = f"light/{args.id}/color/blue"
+LIGHT_COLOR_GREEN_TOPIC = f"light/{args.id}/color/green"
+
+# ----------------------------------------------------------------------------------------------------------
+
 # Create NeoPixel object with appropriate configuration.
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
-# Intialize the library (must be called once before other functions).
+# Initialize the library (must be called once before other functions).
 strip.begin()
 
 # ----------------------------------------------------------------------------------------------------------
@@ -103,11 +151,13 @@ client.loop_forever()
 
 # ----------------------------------------------------------------------------------------------------------
 
-def rainbow():
-    try:
-        while True:
-            rainbowCycle(strip)
+while True:
+    if stripe_status is "on":
+        if stripe_mode is "rainbow":
+            rainbow_cycle(strip)
+        elif stripe_mode is "static":
+            color_wipe(strip, Color(stripe_red, stripe_blue, stripe_green))
+    else:
+        color_wipe(strip, Color(0, 0, 0), 10)
 
-    except KeyboardInterrupt:
-        if args.clear:
-            colorWipe(strip, Color(0, 0, 0), 10)
+
