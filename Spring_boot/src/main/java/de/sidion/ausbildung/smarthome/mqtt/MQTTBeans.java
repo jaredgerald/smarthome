@@ -1,8 +1,8 @@
 package de.sidion.ausbildung.smarthome.mqtt;
 
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -18,7 +18,7 @@ import org.springframework.messaging.MessageHandler;
 
 import java.util.Map;
 
-@Configuration
+@Configuration()
 @RequiredArgsConstructor
 public class MQTTBeans {
 
@@ -28,6 +28,10 @@ public class MQTTBeans {
     private static final String CLIENT_ID1 = "spring_boot_input";
     private static final String CLIENT_ID2 = "spring_boot_output";
 
+    public static final String MQTT_INPUT_CHANNEL = "mqttInputChannel";
+    public static final String MQTT_OUTPUT_CHANNEL = "mqttOutboundChannel";
+
+    @Bean
     public MqttPahoClientFactory mqttClientFactory() {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
 
@@ -53,28 +57,28 @@ public class MQTTBeans {
     }
 
     @Bean
-    public MessageProducer inbound() {
+    public MessageProducer inbound(MqttPahoClientFactory factory, @Qualifier(MQTT_INPUT_CHANNEL) MessageChannel channel) {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter( CLIENT_ID1, mqttClientFactory(), TOPIC);
+                new MqttPahoMessageDrivenChannelAdapter( CLIENT_ID1, factory, TOPIC);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
-        adapter.setOutputChannel(mqttInputChannel());
+        adapter.setOutputChannel(channel);
         return adapter;
     }
 
     @Bean
-    @ServiceActivator(inputChannel = "mqttOutboundChannel")
-    public MessageHandler mqttOutbound() {
+    @ServiceActivator(inputChannel = MQTT_OUTPUT_CHANNEL)
+    public MessageHandler mqttOutbound(MqttPahoClientFactory factory) {
         MqttPahoMessageHandler messageHandler =
-                new MqttPahoMessageHandler(CLIENT_ID2, mqttClientFactory());
+                new MqttPahoMessageHandler(CLIENT_ID2, factory);
         messageHandler.setAsync(true);
         messageHandler.setDefaultTopic("error");
         return messageHandler;
     }
 
     @Bean
-    @ServiceActivator(inputChannel = "mqttInputChannel")
+    @ServiceActivator(inputChannel = MQTT_INPUT_CHANNEL)
     public MessageHandler handler() {
         return handler;
     }
