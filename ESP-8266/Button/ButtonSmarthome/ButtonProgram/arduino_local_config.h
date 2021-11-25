@@ -1,0 +1,5 @@
+#define h_wifi_ssid "<DEIN WIFI SSID>"
+#define h_wifi_password "<DEIN WIFI PASSWORT>"
+#define h_mqttbroker_host "<DEINE IP VON MQTT BROKER>"
+#define h_mqtt_user "<DEIN MQTT Name>"
+#define h_mqtt_password "<DEIN MQTT Password>"
