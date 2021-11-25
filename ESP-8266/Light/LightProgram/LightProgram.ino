@@ -12,19 +12,32 @@ const char* ssid     = h_wifi_ssid;
 const char* password = h_wifi_password;
 // Config des MQTT Brokers
 const char* MQTT_HOST = h_mqttbroker_host;
-const char* MQTT_CLIENT_ID = "ESP8266Client" + h_device_id;
+const char* MQTT_CLIENT_ID = "ESP8266Client3";
 const char* MQTT_USER = h_mqtt_user;
 const char* MQTT_PASSWORD = h_mqtt_password;
 
-const char* deviceTopic = "light/" + h_device_id;
-const char* statusTopic = deviceTopic + "/status"; //Status topic: "on", "off"
-const char* modeTopic = deviceTopic + "/mode";  // Mode topic '{"mode": "static", "color": {"r": 0, "g": 0, "b": 0} }', '{"mode": "shuffle", "speed": 0 }'
+const int redOutputPin = D6;
+const int greenOutputPin = D7;
+const int blueOutputPin = D8;
+
+const char* deviceTopic = "light/3";
+const char* stateTopic = "light/3/state"; //State topic: "on", "off"
+const char* modeTopic = "light/3/mode";  // Mode topic "{\"mode\":\"static\",\"color\":{\"r\": 25, \"g\":25, \"b\":25}}"
+
+String currentMode = "none";
+
+unsigned long previousMillis = 0; 
+const long interval = 20000; 
 
 WiFiClient espClient;
 PubSubClient pubSubClient(espClient);
 
 void setup() {
   Serial.begin(115200);
+
+  pinMode(redOutputPin, OUTPUT);
+  pinMode(greenOutputPin, OUTPUT);
+  pinMode(blueOutputPin, OUTPUT);
 
   // setup environments
   setup_wifi();
@@ -65,8 +78,8 @@ void connect_mqtt() {
     }
 
     //Topic
-    client.subscribe(statusTopic)
-    client.subscribe(modeTopic)
+    pubSubClient.subscribe(stateTopic);
+    pubSubClient.subscribe(modeTopic);
 
     Serial.println("");
   }
@@ -86,9 +99,8 @@ void callback(char* topic, byte* message, unsigned int length) {
   }
   Serial.println();
 
-  switch (String(topic))
+  if (String(topic) == stateTopic)
   {
-  case statusTopic:
     Serial.print("Changing status to ");
     if(messageTemp == "on"){
       Serial.println("on");
@@ -96,35 +108,113 @@ void callback(char* topic, byte* message, unsigned int length) {
     else if(messageTemp == "off"){
       Serial.println("off");
     }
-    break;
-
-  case modeTopic:
-    Serial.println(messageTemp);
-    break;
-  
-  default:
+  }
+  else if (String(topic) == modeTopic)
+  {
+    on_mode_callback(messageTemp);
+  }
+  else {
     Serial.println("Error for Topic: ");
     Serial.println(messageTemp);
-    break;
   }
+}
+
+void on_mode_callback(String msg) {
+  currentMode = msg;
+  Serial.println("Arrived mode: ");
+  Serial.println(msg);
+
+  DynamicJsonDocument doc(1024);
+  deserializeJson(doc, msg);
+
+  const char* mode = doc["mode"]; 
+
+  if(strcmp(mode, "static") == 0) {
+    mode_static(doc);
+  }
+  else if (strcmp(mode, "shuffle") == 0) {
+    mode_shuffle(doc);
+  }
+  else if (strcmp(mode, "blink") == 0) {
+    mode_blink(doc);
+  }
+  else if (strcmp(mode, "fade") == 0) {
+    mode_fade(doc);
+  }
+  else if (strcmp(mode, "multicolor") == 0) {
+    mode_multicolor(doc);
+  }
+  else {
+    Serial.println("Error: Mode not existing:");
+    Serial.println(mode);
+  }
+
+  if(!pubSubClient.connected()) {
+    connect_mqtt();
+  }
+
+  mqtt_publish();
+}
+
+void mode_static(DynamicJsonDocument doc) {
+  int red = doc["color"]["r"];
+  int green = doc["color"]["g"];
+  int blue = doc["color"]["b"];
+
+  Serial.println(red);
+  Serial.println(green);
+  Serial.println(blue);
+}
+
+void mode_shuffle(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  Serial.println(speed);
+}
+
+void mode_blink(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  int red = doc["color"]["r"];
+  int green = doc["color"]["g"];
+  int blue = doc["color"]["b"];
+  Serial.println(red);
+  Serial.println(green);
+  Serial.println(blue);
+  Serial.println(speed);
+}
+
+void mode_fade(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  Serial.println(speed);
+}
+
+void mode_multicolor(DynamicJsonDocument doc) {
   
 }
 
-// void mqtt_publish(char* msg) {
-//   // publish some data
-//   if(!pubSubClient.connected()) {
-//     connect_mqtt();
-//   }
-//   pubSubClient.publish("/iot/esp8266", msg);
-//   Serial.println("Published the following message:");
-//   Serial.println(msg);
-// }
+void mqtt_publish() {
+  // publish some data
+  char* msg = "Test";
+
+  pubSubClient.publish("main/3", msg);
+
+  Serial.println("Published the following message:");
+  Serial.println(msg);
+}
 
 void loop() {
   if(!pubSubClient.connected()) {
     connect_mqtt();
   }
   pubSubClient.loop();
+
+  unsigned long currentMillis = millis(); 
+
+  if (currentMillis - previousMillis >= interval)
+  {
+    previousMillis = currentMillis;
+
+    Serial.println("Print");
+  }  
 
   //mqtt_publish(eventBuf);
 }
