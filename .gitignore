@@ -1,4 +1,7 @@
 HELP.md
+
+.smarthome_spring_old
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
