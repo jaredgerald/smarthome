@@ -93,10 +93,13 @@ def wheel(pos):
 
 # Process arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--username', action='store', dest='username', help='The mqtt username.', required=True)
-parser.add_argument('-P', '--password', action='store', dest='password', help='The mqtt password.', required=True)
-parser.add_argument('-i', '--id', type=int, action='store', help='<Required> Subscribe to topics', required=True)
-# parser.add_argument('-c', '--config', action='store', default='', dest='config', help='The light strip config')
+parser.add_argument('-u', '--username', action='store', dest='username', help='The mqtt username.')
+parser.add_argument('-P', '--password', action='store', dest='password', help='The mqtt password.')
+parser.add_argument('-i', '--id', type=int, action='store', help='The id you got from Spring boot')
+parser.add_argument('-i', '--ip', action='store', dest='ip', default='127.0.0.1', help='The mqtt Server ip')
+parser.add_argument('-p', '--port', type=int, action='store', dest='port', default=1883, help='The mqtt Server port')
+parser.add_argument('-n', '--pin', type=int, action='store', default=4, dest='pin', help='The sensor pin')
+
 args = parser.parse_args()
 
 # ----------------------------------------------------------------------------------------------------------
@@ -139,8 +142,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 client.username_pw_set(username=args.username, password=args.password)
-
-client.connect("127.0.0.1", 1883, 60)
+client.connect(args.ip, args.port, 60)
 
 # Blocking call that processes network traffic, dispatches callbacks and
 # handles reconnecting.
