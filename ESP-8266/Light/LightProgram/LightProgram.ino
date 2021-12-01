@@ -1,39 +1,56 @@
-// Library für WiFi-Verbindung
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <sstream>
 #include "arduino_local_config.h"
 
-// Config des WiFi-Netzwerks
+#define NTP_OFFSET   60 * 60      // In seconds
+#define NTP_INTERVAL 60 * 1000    // In miliseconds
+#define NTP_ADDRESS  "europe.pool.ntp.org"
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
+
+const String deviceID = h_device_id;
+
+// Network config:
 const char* ssid     = h_wifi_ssid;
 const char* password = h_wifi_password;
-// Config des MQTT Brokers
+
+// MQTT config:
 const char* MQTT_HOST = h_mqttbroker_host;
-const char* MQTT_CLIENT_ID = "ESP8266Client3";
+const char* MQTT_CLIENT_ID = ("ESP8266Client" + deviceID).c_str();
 const char* MQTT_USER = h_mqtt_user;
 const char* MQTT_PASSWORD = h_mqtt_password;
 
-const int redOutputPin = D6;
-const int greenOutputPin = D7;
-const int blueOutputPin = D8;
+// Output pins:
+const int redOutputPin = h_red_pin;
+const int greenOutputPin = h_green_pin;
+const int blueOutputPin = h_blue_pin;
 
-const char* deviceTopic = "light/3";
-const char* stateTopic = "light/3/state"; //State topic: "on", "off"
-const char* modeTopic = "light/3/mode";  // Mode topic "{\"mode\":\"static\",\"color\":{\"r\": 25, \"g\":25, \"b\":25}}"
+// Topic:
+// Mode topic like: "{\"mode\":\"static\",\"color\":{\"r\": 25, \"g\":25, \"b\":25}}"
+const String modeTopic = "light/" +  deviceID + "/mode";
 
-String currentMode = "none";
+unsigned long previousMillisPublish = 0; 
+const long intervalPublish = h_publish_interval_s * 1000;
 
-unsigned long previousMillis = 0; 
-const long interval = 20000; 
+unsigned long previousMillisMode = 0; 
+unsigned long intervalMode = 1;
+bool modeDone = false;
+
+DynamicJsonDocument currentMode(1024);
 
 WiFiClient espClient;
 PubSubClient pubSubClient(espClient);
 
 void setup() {
   Serial.begin(115200);
+
+  timeClient.begin();
 
   pinMode(redOutputPin, OUTPUT);
   pinMode(greenOutputPin, OUTPUT);
@@ -59,7 +76,7 @@ void setup_wifi() {
 
 void setup_mqtt() {
   Serial.println("Setting up MQTT: ");
-  Serial.println(h_mqttbroker_host);
+  Serial.println(MQTT_HOST);
   pubSubClient.setServer(MQTT_HOST, 1883);
   pubSubClient.setCallback(callback);
   Serial.println("Setup done MQTT");
@@ -67,7 +84,7 @@ void setup_mqtt() {
 
 void connect_mqtt() {
   Serial.println("Connecting to MQTT: ");
-  Serial.println(h_mqttbroker_host);
+  Serial.println(MQTT_HOST);
 
   if (!pubSubClient.connected()) {
     Serial.println("MQTT connecting");
@@ -77,83 +94,59 @@ void connect_mqtt() {
       Serial.print("-");
     }
 
-    //Topic
-    pubSubClient.subscribe(stateTopic);
-    pubSubClient.subscribe(modeTopic);
+    //Subscribe to topic
+    pubSubClient.subscribe(modeTopic.c_str());
 
     Serial.println("");
   }
   Serial.println("MQTT Connected");
 }
 
-//Topics to subscribe
-void callback(char* topic, byte* message, unsigned int length) {
-  Serial.print("Message arrived on topic: ");
-  Serial.print(topic);
-  Serial.print(". Message: ");
-  String messageTemp;
-  
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)message[i]);
-    messageTemp += (char)message[i];
-  }
-  Serial.println();
+void mqtt_publish_time() {  
+  unsigned long time = timeClient.getEpochTime();
 
-  if (String(topic) == stateTopic)
-  {
-    Serial.print("Changing status to ");
-    if(messageTemp == "on"){
-      Serial.println("on");
-    }
-    else if(messageTemp == "off"){
-      Serial.println("off");
-    }
-  }
-  else if (String(topic) == modeTopic)
-  {
-    on_mode_callback(messageTemp);
-  }
-  else {
-    Serial.println("Error for Topic: ");
-    Serial.println(messageTemp);
-  }
+  std::ostringstream oss;
+  oss << time;
+
+  std::string timeString = oss.str();
+  const char* timeCharConst = timeString.c_str();
+
+  String pubTopic = "main/" + deviceID + "/state";
+
+  pubSubClient.publish(pubTopic.c_str(), timeCharConst);
+
+  Serial.println();
+  Serial.println("Published following time:");
+  Serial.println(timeCharConst);
+  Serial.println("To topic:");
+  Serial.println(pubTopic);
+  Serial.println();
 }
 
-void on_mode_callback(String msg) {
-  currentMode = msg;
-  Serial.println("Arrived mode: ");
-  Serial.println(msg);
+// On arriving message:
+void callback(char* topic, byte* message, unsigned int length) {
+  Serial.println("---------------------------------------");
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
 
-  DynamicJsonDocument doc(1024);
-  deserializeJson(doc, msg);
+  // If topic is modeTopic
+  if (String(topic) == modeTopic)
+  {
+    String mode;
+    for (int i = 0; i < length; i++) {
+      mode += (char)message[i];
+    }
 
-  const char* mode = doc["mode"]; 
+    Serial.println("Arrived mode: ");
+    Serial.print(mode);
+    Serial.println();
 
-  if(strcmp(mode, "static") == 0) {
-    mode_static(doc);
-  }
-  else if (strcmp(mode, "shuffle") == 0) {
-    mode_shuffle(doc);
-  }
-  else if (strcmp(mode, "blink") == 0) {
-    mode_blink(doc);
-  }
-  else if (strcmp(mode, "fade") == 0) {
-    mode_fade(doc);
-  }
-  else if (strcmp(mode, "multicolor") == 0) {
-    mode_multicolor(doc);
+    deserializeJson(currentMode, mode);
   }
   else {
-    Serial.println("Error: Mode not existing:");
-    Serial.println(mode);
-  }
-
-  if(!pubSubClient.connected()) {
-    connect_mqtt();
-  }
-
-  mqtt_publish();
+    Serial.println("Error: Topic is not mode");
+  }  
+  Serial.println("---------------------------------------");
 }
 
 void mode_static(DynamicJsonDocument doc) {
@@ -161,9 +154,15 @@ void mode_static(DynamicJsonDocument doc) {
   int green = doc["color"]["g"];
   int blue = doc["color"]["b"];
 
-  Serial.println(red);
-  Serial.println(green);
-  Serial.println(blue);
+  Serial.println(redOut);
+  Serial.println(greenOut);
+  Serial.println(blueOut);
+
+  analogWrite(redOutputPin, redOut);
+  analogWrite(greenOutputPin, greenOut);
+  analogWrite(blueOutputPin, blueOut);
+
+  modeDone = true;
 }
 
 void mode_shuffle(DynamicJsonDocument doc) {
@@ -191,14 +190,37 @@ void mode_multicolor(DynamicJsonDocument doc) {
   
 }
 
-void mqtt_publish() {
-  // publish some data
-  char* msg = "Test";
+void execute_led_mode() {
+  const String mode = String(currentMode["mode"]); 
 
-  pubSubClient.publish("main/3", msg);
+  unsigned long currentMillis = millis();
 
-  Serial.println("Published the following message:");
-  Serial.println(msg);
+  bool isMillisGreaterInterval = currentMillis - previousMillisMode >= intervalMode;
+
+  if(mode == "static" && intervalMode != 0) {
+    mode_static(currentMode);
+    intervalMode = 0;
+  }
+  else if (mode == "shuffle" && isMillisGreaterInterval) {
+    mode_shuffle(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "blink" && isMillisGreaterInterval) {
+    mode_blink(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "fade" && isMillisGreaterInterval) {
+    mode_fade(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "multicolor" && isMillisGreaterInterval) {
+    mode_multicolor(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else {
+    Serial.println("Error: Mode not existing:");
+    Serial.println(mode);
+  }
 }
 
 void loop() {
@@ -209,12 +231,13 @@ void loop() {
 
   unsigned long currentMillis = millis(); 
 
-  if (currentMillis - previousMillis >= interval)
+  if (currentMillis - previousMillisPublish >= intervalPublish)
   {
-    previousMillis = currentMillis;
+    previousMillisPublish = currentMillis;
 
-    Serial.println("Print");
-  }  
+    timeClient.update();
+    mqtt_publish_time();
+  }
 
-  //mqtt_publish(eventBuf);
+  execute_led_mode();
 }
