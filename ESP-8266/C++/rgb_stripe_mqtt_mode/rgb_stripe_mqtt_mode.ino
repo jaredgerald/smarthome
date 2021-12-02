@@ -5,7 +5,7 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <sstream>
-#include "arduino_local_config.h"
+#include "../local_config.h"
 
 #define NTP_OFFSET   60 * 60      // In seconds
 #define NTP_INTERVAL 60 * 1000    // In miliseconds
@@ -154,13 +154,13 @@ void mode_static(DynamicJsonDocument doc) {
   int green = doc["color"]["g"];
   int blue = doc["color"]["b"];
 
-  Serial.println(redOut);
-  Serial.println(greenOut);
-  Serial.println(blueOut);
+  Serial.println(red);
+  Serial.println(green);
+  Serial.println(blue);
 
-  analogWrite(redOutputPin, redOut);
-  analogWrite(greenOutputPin, greenOut);
-  analogWrite(blueOutputPin, blueOut);
+  analogWrite(redOutputPin, red);
+  analogWrite(greenOutputPin, green);
+  analogWrite(blueOutputPin, blue);
 
   modeDone = true;
 }
