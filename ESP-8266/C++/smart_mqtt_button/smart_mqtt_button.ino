@@ -13,7 +13,8 @@ const char* ssid     = h_wifi_ssid;
 const char* password = h_wifi_password;
 // Config des MQTT Brokers
 const char* MQTT_HOST = h_mqttbroker_host;
-const char* MQTT_CLIENT_ID = "d4ad8cd2-9f29-4475-ad6c-47afae2e32c6";
+const String deviceID = h_device_id;
+const char* MQTT_CLIENT_ID = ("ESP8266Button" + deviceID).c_str();
 const char* MQTT_USER = h_mqtt_user;
 const char* MQTT_PASSWORD = h_mqtt_password;
 
