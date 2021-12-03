@@ -1,4 +1,3 @@
-// Library für WiFi-Verbindung
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -8,10 +7,10 @@
 #include <sstream>
 #include "local_config.h"
 
-// Config des WiFi-Netzwerks
+// Wifi config
 const char* ssid     = h_wifi_ssid;
 const char* password = h_wifi_password;
-// Config des MQTT Brokers
+// MQTT config
 const char* MQTT_HOST = h_mqttbroker_host;
 const String deviceID = h_device_id;
 const char* MQTT_CLIENT_ID = ("ESP8266Button" + deviceID).c_str();
