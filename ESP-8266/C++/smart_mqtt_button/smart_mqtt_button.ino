@@ -22,6 +22,8 @@ const char* MQTT_PASSWORD = h_mqtt_password;
 #define NTP_INTERVAL 60 * 1000    // In miliseconds
 #define NTP_ADDRESS  "europe.pool.ntp.org"
 
+const String pubTopic = "main/" +  deviceID + "/state";
+
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 
@@ -76,8 +78,6 @@ void connect_mqtt() {
 }
 
 void mqtt_publish() {
-  // publish some data 
-
   long time = timeClient.getEpochTime();
 
   std::ostringstream oss;
@@ -85,7 +85,7 @@ void mqtt_publish() {
 
   const char* timeString = oss.str().c_str();
 
-  pubSubClient.publish("main/state", timeString);
+  pubSubClient.publish(pubTopic.c_str(), timeString);
 
   Serial.println("Published the following message:");
   Serial.println(timeString);
