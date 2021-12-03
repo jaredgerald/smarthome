@@ -35,6 +35,8 @@ const int blueOutputPin = h_blue_pin;
 // Mode topic like: "{\"mode\":\"static\",\"color\":{\"r\": 25, \"g\":25, \"b\":25}}"
 const String modeTopic = "light/" +  deviceID + "/mode";
 
+const String pubTopic = "main/" + deviceID + "/state";
+
 unsigned long previousMillisPublish = 0;
 const long intervalPublish = h_publish_interval_s * 1000;
 
@@ -124,15 +126,13 @@ void mqtt_publish_time() {
   std::string timeString = oss.str();
   const char* timeCharConst = timeString.c_str();
 
-  String pubTopic = "main/" + deviceID + "/state";
-
   pubSubClient.publish(pubTopic.c_str(), timeCharConst);
 
   Serial.println();
   Serial.println("Published following time:");
   Serial.println(timeCharConst);
   Serial.println("To topic:");
-  Serial.println(pubTopic);
+  Serial.println(pubTopic.c_str());
   Serial.println();
 }
 
