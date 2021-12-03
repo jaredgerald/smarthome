@@ -1,7 +1,16 @@
 # Smarthome project:
 
-ToDo:
+## Get Started with ESP-82666 C++ Programs:
+    1. Open Arduino IDE.
+    2. Go to "Sketch", "Add file...".
+    3. Select the localconfig.h file.
+    4. Now a new File will be created in the Project this folder.
+    5. Edit the new file.
+    6. Upload sketch to Esp-8266
 
+
+
+ToDo:
 
 #### Sequence:
 
