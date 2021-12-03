@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include "../local_config.h"
+#include "local_config.h"
 
 const String deviceID = h_device_id;
 

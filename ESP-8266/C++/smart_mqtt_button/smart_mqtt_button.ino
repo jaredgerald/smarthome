@@ -6,7 +6,7 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <sstream>
-#include "../local_config.h"
+#include "local_config.h"
 
 // Config des WiFi-Netzwerks
 const char* ssid     = h_wifi_ssid;
