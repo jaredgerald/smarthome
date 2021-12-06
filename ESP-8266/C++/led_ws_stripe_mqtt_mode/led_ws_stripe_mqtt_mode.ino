@@ -4,11 +4,15 @@
 
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#include <iostream>
-#include <cstring>
-#include <string>
 #include <sstream>
 #include "arduino_local_config.h"
+
+#define NTP_OFFSET   60 * 60      // In seconds
+#define NTP_INTERVAL 60 * 1000    // In miliseconds
+#define NTP_ADDRESS  "europe.pool.ntp.org"
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 
 const String deviceID = h_device_id;
 
@@ -27,21 +31,18 @@ const int redOutputPin = h_red_pin;
 const int greenOutputPin = h_green_pin;
 const int blueOutputPin = h_blue_pin;
 
-// Topics:
-const String redLedTopic = "light/" +  deviceID + "/red";
-const String greenLedTopic = "light/" +  deviceID + "/green";
-const String blueLedTopic = "light/" +  deviceID + "/blue";
-const String publishTopic = "main/" + deviceID + "/state";
+// Topic:
+// Mode topic like: "{\"mode\":\"static\",\"color\":{\"r\": 25, \"g\":25, \"b\":25}}"
+const String modeTopic = "light/" +  deviceID + "/mode";
 
 unsigned long previousMillisPublish = 0; 
 const long intervalPublish = h_publish_interval_s * 1000;
 
-#define NTP_OFFSET   60 * 60      // In seconds
-#define NTP_INTERVAL 60 * 1000    // In miliseconds
-#define NTP_ADDRESS  "europe.pool.ntp.org"
+unsigned long previousMillisMode = 0; 
+unsigned long intervalMode = 1;
+bool modeDone = false;
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
+DynamicJsonDocument currentMode(1024);
 
 WiFiClient espClient;
 PubSubClient pubSubClient(espClient);
@@ -93,10 +94,8 @@ void connect_mqtt() {
       Serial.print("-");
     }
 
-    //Subscribe to topics
-    pubSubClient.subscribe(redLedTopic.c_str());
-    pubSubClient.subscribe(greenLedTopic.c_str());
-    pubSubClient.subscribe(blueLedTopic.c_str());
+    //Subscribe to topic
+    pubSubClient.subscribe(modeTopic.c_str());
 
     Serial.println("");
   }
@@ -112,13 +111,15 @@ void mqtt_publish_time() {
   std::string timeString = oss.str();
   const char* timeCharConst = timeString.c_str();
 
-  pubSubClient.publish(publishTopic.c_str(), timeCharConst);
+  String pubTopic = "main/" + deviceID + "/state";
+
+  pubSubClient.publish(pubTopic.c_str(), timeCharConst);
 
   Serial.println();
   Serial.println("Published following time:");
   Serial.println(timeCharConst);
   Serial.println("To topic:");
-  Serial.println(publishTopic);
+  Serial.println(pubTopic);
   Serial.println();
 }
 
@@ -128,32 +129,98 @@ void callback(char* topic, byte* message, unsigned int length) {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
 
-  std::string msg;
-  for (int i = 0; i < length; i++) {
-    msg += (char)message[i];
-  }
-
-  int value = std::stoi(msg);
-
-  Serial.println();
-  Serial.println("Value: ");
-  Serial.println(value);
-  Serial.println();
-
-  if(String(topic) == redLedTopic)
+  // If topic is modeTopic
+  if (String(topic) == modeTopic)
   {
-    analogWrite(redOutputPin, value);
-  }
-  else if (String(topic) == greenLedTopic)
-  {
-    analogWrite(greenOutputPin, value);
-  }
-  else if (String(topic) == blueLedTopic)
-  {
-    analogWrite(blueOutputPin, value);
-  }
+    String mode;
+    for (int i = 0; i < length; i++) {
+      mode += (char)message[i];
+    }
 
+    Serial.println("Arrived mode: ");
+    Serial.print(mode);
+    Serial.println();
+
+    deserializeJson(currentMode, mode);
+  }
+  else {
+    Serial.println("Error: Topic is not mode");
+  }  
   Serial.println("---------------------------------------");
+}
+
+void mode_static(DynamicJsonDocument doc) {
+  int red = doc["color"]["r"];
+  int green = doc["color"]["g"];
+  int blue = doc["color"]["b"];
+
+  Serial.println(redOut);
+  Serial.println(greenOut);
+  Serial.println(blueOut);
+
+  analogWrite(redOutputPin, redOut);
+  analogWrite(greenOutputPin, greenOut);
+  analogWrite(blueOutputPin, blueOut);
+
+  modeDone = true;
+}
+
+void mode_shuffle(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  Serial.println(speed);
+}
+
+void mode_blink(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  int red = doc["color"]["r"];
+  int green = doc["color"]["g"];
+  int blue = doc["color"]["b"];
+  Serial.println(red);
+  Serial.println(green);
+  Serial.println(blue);
+  Serial.println(speed);
+}
+
+void mode_fade(DynamicJsonDocument doc) {
+  int speed = doc["speed"];
+  Serial.println(speed);
+}
+
+void mode_multicolor(DynamicJsonDocument doc) {
+  
+}
+
+void execute_led_mode() {
+  const String mode = String(currentMode["mode"]); 
+
+  unsigned long currentMillis = millis();
+
+  bool isMillisGreaterInterval = currentMillis - previousMillisMode >= intervalMode;
+
+  if(mode == "static" && intervalMode != 0) {
+    mode_static(currentMode);
+    intervalMode = 0;
+  }
+  else if (mode == "shuffle" && isMillisGreaterInterval) {
+    mode_shuffle(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "blink" && isMillisGreaterInterval) {
+    mode_blink(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "fade" && isMillisGreaterInterval) {
+    mode_fade(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else if (mode == "multicolor" && isMillisGreaterInterval) {
+    mode_multicolor(currentMode);
+    intervalMode = doc["interval"];
+  }
+  else {
+    Serial.println("Error: Mode not existing:");
+    Serial.println(mode);
+  }
 }
 
 void loop() {
@@ -171,4 +238,6 @@ void loop() {
     timeClient.update();
     mqtt_publish_time();
   }
+
+  execute_led_mode();
 }
