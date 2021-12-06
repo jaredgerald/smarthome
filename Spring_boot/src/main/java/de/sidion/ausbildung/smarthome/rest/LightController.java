@@ -18,16 +18,9 @@ public class LightController {
     private final MQTTService mqttService;
     private final ResponseService responseService;
 
-    @PostMapping("/{id}/status/{status}")
-    @PreAuthorize("@deviceService.isDeviceLight(#id)")
-    public ResponseEntity<Object> setLightActiveState(@PathVariable("id") int id,
-                                                      @PathVariable("status") boolean status) {
-        mqttService.setMQTTLightActiveState(id, status);
-        return responseService.createSendResponse(HttpStatus.OK, null);
-    }
-
     @PostMapping("/{id}/mode")
-    @PreAuthorize("@deviceService.isDeviceLight(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'LIGHT', 'PROGRAMMABE_LIGHT') && " +
+            "@deviceService.isDeviceModeValid(#id, #mode)")
     public ResponseEntity<Object> setLightMode(@PathVariable("id") int id,
                                                @RequestBody @Valid LEDModeDTO mode) {
         mqttService.setMQTTLightMode(id, mode);

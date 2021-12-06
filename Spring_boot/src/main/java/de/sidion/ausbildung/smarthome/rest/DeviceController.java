@@ -3,6 +3,7 @@ package de.sidion.ausbildung.smarthome.rest;
 import de.sidion.ausbildung.smarthome.database.entity.Device;
 import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.dto.DeviceDTO;
+import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.util.List;
 public class DeviceController {
     private final DatabaseService databaseService;
     private final ResponseService responseService;
+    private final MQTTService mqttService;
 
     @GetMapping("")
     public ResponseEntity<List<Device>> getAllDevices() {
@@ -32,9 +34,9 @@ public class DeviceController {
     }
 
     @GetMapping("/ping/{id}")
-    public ResponseEntity<List<Device>> getStatusOfDevice(@PathVariable("id") int id) { //todo
-        final List<Device> allDevices = databaseService.findAllDevices();
-        return responseService.createSendResponse(HttpStatus.OK, allDevices);
+    public ResponseEntity<List<Device>> getStatusOfDevice(@PathVariable("id") int id) {
+        mqttService.setMQTTDeviceRequest(id, "getAliveRes");
+        return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
     @PostMapping("")
@@ -51,7 +53,7 @@ public class DeviceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Device> deleteDevice(@PathVariable("id") int id) {
+    public ResponseEntity<Void> deleteDevice(@PathVariable("id") int id) {
         databaseService.deleteDevice(id);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }

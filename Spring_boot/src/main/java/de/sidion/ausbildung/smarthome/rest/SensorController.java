@@ -24,14 +24,14 @@ public class SensorController {
     private final ResponseService responseService;
 
     @GetMapping("/{id}")
-    @PreAuthorize("@deviceService.isDeviceSensor(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SENSOR')")
     public ResponseEntity<DeviceDataDTO> getCurrentDataOfDevice(@PathVariable("id") int id) {
         final DeviceData data = databaseService.findLastDataOfDevice(id);
         return responseService.createSendResponse(HttpStatus.OK, new DeviceDataDTO(data));
     }
 
     @GetMapping("/{id}/history")
-    @PreAuthorize("@deviceService.isDeviceSensor(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SENSOR')")
     public ResponseEntity<List<DeviceDataDTO>> getDataHistoryOfDevice (@PathVariable("id") int id) {
         final List<DeviceData> dataList = databaseService.findAllDataOfDevice(id);
         return responseService.createSendResponse(HttpStatus.OK,

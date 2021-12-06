@@ -32,7 +32,7 @@ public class InputMessageHandler implements MessageHandler {
                 String messagePayload = message.getPayload().toString();
 
                 switch (topicArray[2]) {
-                    case "timesstamp":
+                    case "timestamp":
                         long timestampInt = Long.getLong(messagePayload);
                         LocalDateTime timestamp = LocalDateTime.ofInstant(
                                 Instant.ofEpochMilli(timestampInt), ZoneId.systemDefault());

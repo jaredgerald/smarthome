@@ -29,9 +29,8 @@ public class Device {
     @Column(name = "location", nullable = false, length = 40)
     private String location;
 
-    @Column(name = "type", nullable = false, length = 30)
-    @Enumerated(EnumType.STRING)
-    private DeviceType type;
+    @Column(name = "device_type_id", nullable = false, length = 30)
+    private DeviceType deviceType;
 
     @Column(name = "state", length = 100)
     private String state;

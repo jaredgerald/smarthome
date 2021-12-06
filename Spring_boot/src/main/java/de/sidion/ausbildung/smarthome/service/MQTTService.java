@@ -37,6 +37,10 @@ public class MQTTService {
         gateway.sendToMqtt(command, SPEAKER_TOPIC + id);
     }
 
+    public void setMQTTDeviceRequest(int id, String request) {
+        gateway.sendToMqtt(request, SPEAKER_TOPIC + id);
+    }
+
     public void setMQTTTVCommand(int id, String command) {
         gateway.sendToMqtt(command, TV_TOPIC + id);
     }

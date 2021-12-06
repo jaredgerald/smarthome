@@ -1,6 +1,5 @@
 package de.sidion.ausbildung.smarthome.dto;
 
-import de.sidion.ausbildung.smarthome.enums.DeviceType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,5 +25,5 @@ public class DeviceDTO {
     @Pattern(regexp = "^[\\S]+$")
     private String location;
 
-    private DeviceType deviceType;
+    private DeviceTypeDTO deviceType;
 }

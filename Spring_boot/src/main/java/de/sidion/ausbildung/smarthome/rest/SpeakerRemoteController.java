@@ -22,7 +22,7 @@ public class SpeakerRemoteController {
     private final ResponseService responseService;
 
     @PostMapping("/{id}")
-    @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> turnOnOff(@PathVariable("id") int id) {
         final Device device = databaseService.findDeviceById(id);
         if(!"off".equals(device.getState())) {
@@ -35,7 +35,7 @@ public class SpeakerRemoteController {
     }
 
     @PostMapping("/{id}/volume/{direction}")
-    @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeSpeakerVolume(@PathVariable("id") int id,
                                                       @PathVariable("direction") int direction) {
         if(direction > 0) {
@@ -48,14 +48,14 @@ public class SpeakerRemoteController {
     }
 
     @PostMapping("/{id}/mute")
-    @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> muteSpeaker(@PathVariable("id") int id) {
         mqttService.setMQTTSpeakerCommand(id, "mute");
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
     @PostMapping("/{id}/source")
-    @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeSpeakerSource(@PathVariable("id") int id) {
         mqttService.setMQTTSpeakerCommand(id, "src");
         return responseService.createSendResponse(HttpStatus.OK, null);

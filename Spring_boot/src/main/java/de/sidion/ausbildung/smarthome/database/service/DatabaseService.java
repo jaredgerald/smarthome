@@ -1,11 +1,12 @@
 package de.sidion.ausbildung.smarthome.database.service;
 
-import de.sidion.ausbildung.smarthome.database.entity.Device;
-import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
-import de.sidion.ausbildung.smarthome.database.entity.DeviceDataId;
+import de.sidion.ausbildung.smarthome.database.entity.*;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceDataRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceRepository;
+import de.sidion.ausbildung.smarthome.database.repository.IDeviceTypeRepository;
+import de.sidion.ausbildung.smarthome.database.repository.IModeRepository;
 import de.sidion.ausbildung.smarthome.dto.DeviceDTO;
+import de.sidion.ausbildung.smarthome.dto.DeviceTypeDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,9 +20,19 @@ import java.util.List;
 public class DatabaseService {
     private final IDeviceDataRepository deviceDataRepository;
     private final IDeviceRepository deviceRepository;
+    private final IDeviceTypeRepository deviceTypeRepository;
+    private final IModeRepository modeRepository;
 
     public Device findDeviceById(int id) {
         return deviceRepository.findById(id).orElseThrow(NoResultException::new);
+    }
+
+    public DeviceType findDeviceTypeByName(String name) {
+        return deviceTypeRepository.findByName(name).orElseThrow(NoResultException::new);
+    }
+
+    public boolean existsModeByNameAndType(String name, DeviceType deviceType) {
+        return modeRepository.existsByNameAndDeviceType(name, deviceType);
     }
 
     public boolean existsDeviceById(int id) {
@@ -30,6 +41,10 @@ public class DatabaseService {
 
     public List<Device> findAllDevices() {
         return deviceRepository.findAll();
+    }
+
+    public List<DeviceType> findAllDeviceTypes() {
+        return deviceTypeRepository.findAll();
     }
 
     public DeviceData findLastDataOfDevice(int id) {
@@ -58,8 +73,13 @@ public class DatabaseService {
         Device device = new Device();
         device.setName(deviceDTO.getName());
         device.setLocation(deviceDTO.getLocation());
-        device.setType(deviceDTO.getDeviceType());
+        device.setDeviceType(deviceDTO.getDeviceType().getType());
         return deviceRepository.save(device);
+    }
+
+    @Transactional
+    public DeviceType saveDeviceType(DeviceTypeDTO deviceTypeDTO) {
+        return deviceTypeRepository.save(deviceTypeDTO.getType());
     }
 
     @Transactional
@@ -67,7 +87,7 @@ public class DatabaseService {
         Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
         device.setName(deviceDTO.getName());
         device.setLocation(deviceDTO.getLocation());
-        device.setType(deviceDTO.getDeviceType());
+        device.setDeviceType(deviceDTO.getDeviceType().getType());
         return device;
     }
 
@@ -86,5 +106,10 @@ public class DatabaseService {
     @Transactional
     public void deleteDevice(int id) {
         deviceRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteDeviceType(String name) {
+        deviceTypeRepository.deleteByName(name);
     }
 }
