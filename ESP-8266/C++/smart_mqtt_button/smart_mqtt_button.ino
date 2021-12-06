@@ -1,4 +1,3 @@
-// Library für WiFi-Verbindung
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -6,20 +5,23 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <sstream>
-#include "arduino_local_config.h"
+#include "local_config.h"
 
-// Config des WiFi-Netzwerks
+// Wifi config
 const char* ssid     = h_wifi_ssid;
 const char* password = h_wifi_password;
-// Config des MQTT Brokers
+// MQTT config
 const char* MQTT_HOST = h_mqttbroker_host;
-const char* MQTT_CLIENT_ID = "d4ad8cd2-9f29-4475-ad6c-47afae2e32c6";
+const String deviceID = h_device_id;
+const char* MQTT_CLIENT_ID = ("ESP8266Button" + deviceID).c_str();
 const char* MQTT_USER = h_mqtt_user;
 const char* MQTT_PASSWORD = h_mqtt_password;
 
 #define NTP_OFFSET   60 * 60      // In seconds
 #define NTP_INTERVAL 60 * 1000    // In miliseconds
 #define NTP_ADDRESS  "europe.pool.ntp.org"
+
+const String pubTopic = "main/" +  deviceID + "/state";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
@@ -75,8 +77,6 @@ void connect_mqtt() {
 }
 
 void mqtt_publish() {
-  // publish some data 
-
   long time = timeClient.getEpochTime();
 
   std::ostringstream oss;
@@ -84,7 +84,7 @@ void mqtt_publish() {
 
   const char* timeString = oss.str().c_str();
 
-  pubSubClient.publish("main/state", timeString);
+  pubSubClient.publish(pubTopic.c_str(), timeString);
 
   Serial.println("Published the following message:");
   Serial.println(timeString);
