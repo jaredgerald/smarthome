@@ -31,6 +31,12 @@ public class DeviceController {
         return responseService.createSendResponse(HttpStatus.OK, device);
     }
 
+    @GetMapping("/ping/{id}")
+    public ResponseEntity<List<Device>> getStatusOfDevice(@PathVariable("id") int id) { //todo
+        final List<Device> allDevices = databaseService.findAllDevices();
+        return responseService.createSendResponse(HttpStatus.OK, allDevices);
+    }
+
     @PostMapping("")
     public ResponseEntity<Device> createNewDevice(@RequestBody @Valid DeviceDTO deviceDTO) {
         final Device device = databaseService.saveDevice(deviceDTO);

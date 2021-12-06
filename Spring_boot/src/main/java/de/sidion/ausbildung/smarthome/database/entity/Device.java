@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Table(name = "device", indexes = {
@@ -32,11 +33,11 @@ public class Device {
     @Enumerated(EnumType.STRING)
     private DeviceType type;
 
-    @Column(name = "status", length = 100)
-    private String status;
+    @Column(name = "state", length = 100)
+    private String state;
 
-    @Column(name = "active", nullable = false)
-    private Boolean active = false;
+    @Column(name = "last_timestamp", nullable = false)
+    private LocalDateTime lastTimestamp;
 
     @Override
     public boolean equals(Object o) {

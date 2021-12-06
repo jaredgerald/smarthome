@@ -2,7 +2,6 @@ package de.sidion.ausbildung.smarthome.rest;
 
 import de.sidion.ausbildung.smarthome.database.entity.Device;
 import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
-import de.sidion.ausbildung.smarthome.service.DeviceStateService;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
@@ -20,20 +19,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class SpeakerRemoteController {
     private final MQTTService mqttService;
     private final DatabaseService databaseService;
-    private final DeviceStateService deviceStateService;
     private final ResponseService responseService;
 
     @PostMapping("/{id}")
     @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
     public ResponseEntity<Object> turnOnOff(@PathVariable("id") int id) {
         final Device device = databaseService.findDeviceById(id);
-        if(!"off".equals(device.getStatus())) {
+        if(!"off".equals(device.getState())) {
             mqttService.setMQTTSpeakerCommand(id, "on");
         }
         else {
             mqttService.setMQTTSpeakerCommand(id, "off");
         }
-        deviceStateService.setInactive(id);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
@@ -47,7 +44,6 @@ public class SpeakerRemoteController {
         else {
             mqttService.setMQTTSpeakerCommand(id, "down");
         }
-        deviceStateService.setInactive(id);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
@@ -55,7 +51,6 @@ public class SpeakerRemoteController {
     @PreAuthorize("@deviceService.isDeviceSpeaker(#id)")
     public ResponseEntity<Object> muteSpeaker(@PathVariable("id") int id) {
         mqttService.setMQTTSpeakerCommand(id, "mute");
-        deviceStateService.setInactive(id);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 

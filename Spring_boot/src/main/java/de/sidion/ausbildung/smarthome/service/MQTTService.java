@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class MQTTService {
-    private static final String LIGHT_TOPIC = "light/";
+    private static final String LIGHT_TOPIC = "light/"; //device/id/function
     private static final String SPEAKER_TOPIC = "speaker/";
     private static final String TV_TOPIC = "tv/";
     private static final String STATUS_TOPIC = "status/";

@@ -72,15 +72,15 @@ public class DatabaseService {
     }
 
     @Transactional
-    public void updateDeviceState(int id, boolean isActive) {
+    public void updateDeviceTimestamp(int id, LocalDateTime date) {
         Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
-        device.setActive(isActive);
+        device.setLastTimestamp(date);
     }
 
     @Transactional
     public void updateDeviceStatus(int id, String status) {
         Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
-        device.setStatus(status);
+        device.setState(status);
     }
 
     @Transactional
