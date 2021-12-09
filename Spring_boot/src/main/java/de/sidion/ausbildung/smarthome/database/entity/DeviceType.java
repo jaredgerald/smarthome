@@ -2,10 +2,7 @@ package de.sidion.ausbildung.smarthome.database.entity;
 
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Getter
 @ToString
@@ -16,6 +13,7 @@ import javax.persistence.Table;
 @Entity
 public class DeviceType {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 

@@ -7,13 +7,18 @@ import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/device_type")
 public class DeviceTypeController {
 
@@ -33,8 +38,8 @@ public class DeviceTypeController {
     }
 
     @PostMapping("")
-    public ResponseEntity<DeviceType> createNewDeviceType(@RequestBody @Valid DeviceTypeDTO deviceTypeDTO) {
-        final DeviceType deviceType = databaseService.saveDeviceType(deviceTypeDTO);
+    public ResponseEntity<DeviceType> createNewDeviceType(@RequestBody @Valid DeviceTypeDTO type) {
+        final DeviceType deviceType = databaseService.saveDeviceType(type.getName());
         return responseService.createSendResponse(HttpStatus.CREATED, deviceType);
     }
 

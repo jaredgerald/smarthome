@@ -19,7 +19,7 @@ public class LightController {
     private final ResponseService responseService;
 
     @PostMapping("/{id}/mode")
-    @PreAuthorize("@deviceService.isDeviceString(#id, 'LIGHT', 'PROGRAMMABE_LIGHT') && " +
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'LIGHT', 'PROGRAMMABLE_LIGHT') && " +
             "@deviceService.isDeviceModeValid(#id, #mode)")
     public ResponseEntity<Object> setLightMode(@PathVariable("id") int id,
                                                @RequestBody @Valid LEDModeDTO mode) {

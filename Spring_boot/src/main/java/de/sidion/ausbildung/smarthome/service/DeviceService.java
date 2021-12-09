@@ -23,7 +23,7 @@ public class DeviceService {
         return deviceTypes.contains(device.getDeviceType());
     }
 
-    public boolean isDeviceModeValid(int id, LEDModeDTO modeDTO) {
+    public boolean isDeviceModeValid(int id, LEDModeDTO modeDTO) { //custom error message
         final Device device = databaseService.findDevice(id);
         final String mode = modeDTO.getMode();
         return databaseService.existsModeByNameAndType(mode, device.getDeviceType());

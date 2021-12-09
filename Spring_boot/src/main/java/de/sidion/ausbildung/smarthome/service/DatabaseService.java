@@ -98,8 +98,10 @@ public class DatabaseService {
     }
 
     @Transactional
-    public DeviceType saveDeviceType(DeviceTypeDTO deviceTypeDTO) {
-        return deviceTypeRepository.save(deviceTypeDTO.getType());
+    public DeviceType saveDeviceType(String deviceTypeName) {
+        DeviceType deviceType = new DeviceType();
+        deviceType.setName(deviceTypeName);
+        return deviceTypeRepository.save(deviceType);
     }
 
     @Transactional

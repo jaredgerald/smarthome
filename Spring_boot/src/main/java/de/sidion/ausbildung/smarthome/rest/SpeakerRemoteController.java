@@ -1,8 +1,11 @@
 package de.sidion.ausbildung.smarthome.rest;
 
+import de.sidion.ausbildung.smarthome.database.entity.Device;
 import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
+import de.sidion.ausbildung.smarthome.dto.OutputDeviceDTO;
 import de.sidion.ausbildung.smarthome.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
+import de.sidion.ausbildung.smarthome.service.OutputDeviceService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,11 +25,13 @@ public class SpeakerRemoteController {
     private final MQTTService mqttService;
     private final DatabaseService databaseService;
     private final ResponseService responseService;
+    private final OutputDeviceService outputDeviceService;
 
     @PostMapping("/{id}")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeActiveState(@PathVariable("id") int id) {
-        final Optional<DeviceData> data = databaseService.findLastDataOfDeviceByIdAndDataType(id, "STATE");
+        final String dataType = "STATE";
+        final Optional<DeviceData> data = databaseService.findLastDataOfDeviceByIdAndDataType(id, dataType);
 
         String command = "off";
         if (data.isPresent()) {
@@ -34,7 +39,12 @@ public class SpeakerRemoteController {
         }
         mqttService.sendCommand(id, command);
 
-        return responseService.createSendResponse(HttpStatus.OK, null);
+        databaseService.saveDeviceData(id, dataType, command);
+
+        final Device device = databaseService.findDevice(id);
+        final OutputDeviceDTO deviceDTO = outputDeviceService.createOutPutDeviceDTO(device);
+
+        return responseService.createSendResponse(HttpStatus.OK, deviceDTO);
     }
 
     @PostMapping("/{id}/volume/{direction}")
@@ -47,20 +57,32 @@ public class SpeakerRemoteController {
         else {
             mqttService.sendCommand(id, "down");
         }
-        return responseService.createSendResponse(HttpStatus.OK, null);
+
+        final Device device = databaseService.findDevice(id);
+        final OutputDeviceDTO deviceDTO = outputDeviceService.createOutPutDeviceDTO(device);
+
+        return responseService.createSendResponse(HttpStatus.OK, deviceDTO);
     }
 
     @PostMapping("/{id}/mute")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> muteSpeaker(@PathVariable("id") int id) {
         mqttService.sendCommand(id, "mute");
-        return responseService.createSendResponse(HttpStatus.OK, null);
+
+        final Device device = databaseService.findDevice(id);
+        final OutputDeviceDTO deviceDTO = outputDeviceService.createOutPutDeviceDTO(device);
+
+        return responseService.createSendResponse(HttpStatus.OK, deviceDTO);
     }
 
     @PostMapping("/{id}/source")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeSpeakerSource(@PathVariable("id") int id) {
         mqttService.sendCommand(id, "src");
-        return responseService.createSendResponse(HttpStatus.OK, null);
+
+        final Device device = databaseService.findDevice(id);
+        final OutputDeviceDTO deviceDTO = outputDeviceService.createOutPutDeviceDTO(device);
+
+        return responseService.createSendResponse(HttpStatus.OK, deviceDTO);
     }
 }
