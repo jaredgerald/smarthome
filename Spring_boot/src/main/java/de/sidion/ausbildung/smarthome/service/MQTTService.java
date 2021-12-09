@@ -19,7 +19,7 @@ public class MQTTService {
     } //Async response
 
     public void sendDeviceRequest(int id) {
-        gateway.sendToMqtt("POST", SELECTOR_TOPIC + id + REQUEST_TOPIC); //Async response
+        gateway.sendToMqtt("SEND_TIMESTAMP", SELECTOR_TOPIC + id + REQUEST_TOPIC); //Async response
     }
 
     public void sendCommand(int id, String command) {
