@@ -22,7 +22,7 @@ public class TVRemoteController {
     @PreAuthorize("@deviceService.isDeviceString(#id, 'TV')")
     public ResponseEntity<Object> publishCommand(@PathVariable("id") int id,
                                                  @PathVariable("command") String command) {
-        mqttService.setMQTTTVCommand(id, command);
+        mqttService.sendCommand(id, command);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 }

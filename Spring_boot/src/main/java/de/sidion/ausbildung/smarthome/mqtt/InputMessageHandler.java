@@ -8,9 +8,6 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Objects;
 
 @RequiredArgsConstructor
@@ -18,12 +15,15 @@ import java.util.Objects;
 public class InputMessageHandler implements MessageHandler {
     private final DatabaseService databaseService;
 
+    private static final String TIMESTAMP = "timestamp";
+    private static final String SENSOR_DATA = "sensor_data";
+
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
         try {
             String topic = Objects.requireNonNull(message.getHeaders().get(MqttHeaders.RECEIVED_TOPIC)).toString();
 
-            //Array content: main/{ id }/{ function }
+            //--> Array content: main/{ id }/{ function }
             String[] topicArray = topic.split("/");
 
             int deviceId = Integer.parseInt(topicArray[1]);
@@ -32,14 +32,11 @@ public class InputMessageHandler implements MessageHandler {
                 String messagePayload = message.getPayload().toString();
 
                 switch (topicArray[2]) {
-                    case "timestamp":
-                        long timestampInt = Long.getLong(messagePayload);
-                        LocalDateTime timestamp = LocalDateTime.ofInstant(
-                                Instant.ofEpochMilli(timestampInt), ZoneId.systemDefault());
-                        databaseService.updateDeviceTimestamp(deviceId, timestamp);
+                    case TIMESTAMP:
+                        databaseService.saveDeviceData(deviceId, TIMESTAMP, messagePayload);
                         break;
-                    case "data":
-                        databaseService.saveDeviceData(deviceId, messagePayload);
+                    case SENSOR_DATA:
+                        databaseService.saveDeviceData(deviceId, SENSOR_DATA, messagePayload);
                         break;
                     default:
                         //Set traffic light to blink red! for 15 min

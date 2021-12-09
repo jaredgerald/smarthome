@@ -17,13 +17,13 @@ public class ResponseService {
 
     public void sendResponse(HttpStatus status) {
         if(status.is2xxSuccessful()) {
-            mqttService.setMQTTTrafficLightCommand("Green");
+            mqttService.sendCommand(1, "Green");
         }
         else if (status.is4xxClientError()) {
-            mqttService.setMQTTTrafficLightCommand("Yellow");
+            mqttService.sendCommand(1, "Yellow");
         }
         else if (status.is5xxServerError()) {
-            mqttService.setMQTTTrafficLightCommand("Red-Blink");
+            mqttService.sendCommand(1, "Red-Blink");
         }
     }
 }

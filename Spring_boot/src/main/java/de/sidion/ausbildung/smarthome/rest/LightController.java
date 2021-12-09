@@ -23,7 +23,7 @@ public class LightController {
             "@deviceService.isDeviceModeValid(#id, #mode)")
     public ResponseEntity<Object> setLightMode(@PathVariable("id") int id,
                                                @RequestBody @Valid LEDModeDTO mode) {
-        mqttService.setMQTTLightMode(id, mode);
+        mqttService.sendLightMode(id, mode);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 }

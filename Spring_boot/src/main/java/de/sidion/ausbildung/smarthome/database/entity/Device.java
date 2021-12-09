@@ -1,19 +1,15 @@
 package de.sidion.ausbildung.smarthome.database.entity;
 
-import de.sidion.ausbildung.smarthome.enums.DeviceType;
 import lombok.*;
-import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.List;
 
 @Table(name = "device", indexes = {
         @Index(name = "device_un", columnList = "name", unique = true)
 })
 @Entity
 @Getter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
@@ -29,25 +25,11 @@ public class Device {
     @Column(name = "location", nullable = false, length = 40)
     private String location;
 
-    @Column(name = "device_type_id", nullable = false, length = 30)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "device_type_id", nullable = false)
     private DeviceType deviceType;
 
-    @Column(name = "state", length = 100)
-    private String state;
-
-    @Column(name = "last_timestamp", nullable = false)
-    private LocalDateTime lastTimestamp;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Device device = (Device) o;
-        return id != null && Objects.equals(id, device.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return 0;
-    }
+    @OneToMany
+    @JoinColumn(name = "device_id") //Look if necessary
+    private List<DeviceData> deviceData;
 }

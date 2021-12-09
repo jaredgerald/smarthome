@@ -1,8 +1,8 @@
 package de.sidion.ausbildung.smarthome.rest;
 
-import de.sidion.ausbildung.smarthome.database.entity.Device;
 import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.dto.DeviceDTO;
+import de.sidion.ausbildung.smarthome.dto.OutputDeviceDTO;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
@@ -22,33 +22,33 @@ public class DeviceController {
     private final MQTTService mqttService;
 
     @GetMapping("")
-    public ResponseEntity<List<Device>> getAllDevices() {
-        final List<Device> allDevices = databaseService.findAllDevices();
+    public ResponseEntity<List<OutputDeviceDTO>> getAllDevices() {
+        final List<OutputDeviceDTO> allDevices = databaseService.findAllDeviceDTOs();
         return responseService.createSendResponse(HttpStatus.OK, allDevices);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Device> getDevice(@PathVariable("id") int id) {
-        final Device device = databaseService.findDeviceById(id);
+    public ResponseEntity<OutputDeviceDTO> getDevice(@PathVariable("id") int id) {
+        final OutputDeviceDTO device = databaseService.findDeviceDTO(id);
         return responseService.createSendResponse(HttpStatus.OK, device);
     }
 
-    @GetMapping("/ping/{id}")
-    public ResponseEntity<List<Device>> getStatusOfDevice(@PathVariable("id") int id) {
-        mqttService.setMQTTDeviceRequest(id, "getAliveRes");
+    @PostMapping("/ping/{id}")
+    public ResponseEntity<Void> requestStatusOfDevice(@PathVariable("id") int id) { //wait for response!
+        mqttService.sendDeviceRequest(id);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
     @PostMapping("")
-    public ResponseEntity<Device> createNewDevice(@RequestBody @Valid DeviceDTO deviceDTO) {
-        final Device device = databaseService.saveDevice(deviceDTO);
+    public ResponseEntity<OutputDeviceDTO> createNewDevice(@RequestBody @Valid DeviceDTO deviceDTO) {
+        final OutputDeviceDTO device = databaseService.saveDevice(deviceDTO);
         return responseService.createSendResponse(HttpStatus.CREATED, device);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Device> updateDevice(@PathVariable("id") int id,
+    public ResponseEntity<OutputDeviceDTO> updateDevice(@PathVariable("id") int id,
                                                @RequestBody @Valid DeviceDTO deviceDTO) {
-        final Device device = databaseService.updateDevice(id, deviceDTO);
+        final OutputDeviceDTO device = databaseService.updateDevice(id, deviceDTO);
         return responseService.createSendResponse(HttpStatus.OK, device);
     }
 

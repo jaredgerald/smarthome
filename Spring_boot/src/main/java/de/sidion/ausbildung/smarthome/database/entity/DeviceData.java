@@ -14,7 +14,9 @@ public class DeviceData {
     @EmbeddedId
     private DeviceDataId id;
 
-    @Lob
-    @Column(name = "data")
+    @Column(name = "data_type", nullable = false, length = 50)
+    private String dataType;
+
+    @Column(name = "data", nullable = false, length = 200)
     private String data;
 }

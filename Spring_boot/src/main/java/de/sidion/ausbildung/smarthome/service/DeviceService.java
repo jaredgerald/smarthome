@@ -17,7 +17,7 @@ public class DeviceService {
     private final DatabaseService databaseService;
 
     public boolean isDeviceString(int id, String... typeStringArray) {
-        final Device device = databaseService.findDeviceById(id);
+        final Device device = databaseService.findDevice(id);
         final List<DeviceType> deviceTypes = Arrays.stream(typeStringArray)
                 .map(databaseService::findDeviceTypeByName)
                 .collect(Collectors.toList());
@@ -25,7 +25,7 @@ public class DeviceService {
     }
 
     public boolean isDeviceModeValid(int id, LEDModeDTO modeDTO) {
-        final Device device = databaseService.findDeviceById(id);
+        final Device device = databaseService.findDevice(id);
         final String mode = modeDTO.getMode();
         return databaseService.existsModeByNameAndType(mode, device.getDeviceType());
     }

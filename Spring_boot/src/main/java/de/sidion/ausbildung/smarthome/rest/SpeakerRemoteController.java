@@ -1,6 +1,6 @@
 package de.sidion.ausbildung.smarthome.rest;
 
-import de.sidion.ausbildung.smarthome.database.entity.Device;
+import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
 import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
@@ -23,14 +23,12 @@ public class SpeakerRemoteController {
 
     @PostMapping("/{id}")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
-    public ResponseEntity<Object> turnOnOff(@PathVariable("id") int id) {
-        final Device device = databaseService.findDeviceById(id);
-        if(!"off".equals(device.getState())) {
-            mqttService.setMQTTSpeakerCommand(id, "on");
-        }
-        else {
-            mqttService.setMQTTSpeakerCommand(id, "off");
-        }
+    public ResponseEntity<Object> changeActiveState(@PathVariable("id") int id) {
+
+        final DeviceData data = databaseService.findLastDataOfDeviceByIdAndDataType(id, "state");
+
+        mqttService.sendCommand(id, (data.getData().equals("off")) ? "on" : "off");
+
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
@@ -39,10 +37,10 @@ public class SpeakerRemoteController {
     public ResponseEntity<Object> changeSpeakerVolume(@PathVariable("id") int id,
                                                       @PathVariable("direction") int direction) {
         if(direction > 0) {
-            mqttService.setMQTTSpeakerCommand(id, "up");
+            mqttService.sendCommand(id, "up");
         }
         else {
-            mqttService.setMQTTSpeakerCommand(id, "down");
+            mqttService.sendCommand(id, "down");
         }
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
@@ -50,14 +48,14 @@ public class SpeakerRemoteController {
     @PostMapping("/{id}/mute")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> muteSpeaker(@PathVariable("id") int id) {
-        mqttService.setMQTTSpeakerCommand(id, "mute");
+        mqttService.sendCommand(id, "mute");
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 
     @PostMapping("/{id}/source")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeSpeakerSource(@PathVariable("id") int id) {
-        mqttService.setMQTTSpeakerCommand(id, "src");
+        mqttService.sendCommand(id, "src");
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
 }

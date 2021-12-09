@@ -3,6 +3,7 @@ package de.sidion.ausbildung.smarthome.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -10,6 +11,7 @@ import javax.validation.constraints.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class LEDModeDTO {
     @NotNull
     @NotEmpty

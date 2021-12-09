@@ -1,19 +1,28 @@
 package de.sidion.ausbildung.smarthome.database.service;
 
-import de.sidion.ausbildung.smarthome.database.entity.*;
+import de.sidion.ausbildung.smarthome.database.entity.Device;
+import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
+import de.sidion.ausbildung.smarthome.database.entity.DeviceDataId;
+import de.sidion.ausbildung.smarthome.database.entity.DeviceType;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceDataRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceTypeRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IModeRepository;
 import de.sidion.ausbildung.smarthome.dto.DeviceDTO;
 import de.sidion.ausbildung.smarthome.dto.DeviceTypeDTO;
+import de.sidion.ausbildung.smarthome.dto.OutputDeviceDTO;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -23,8 +32,15 @@ public class DatabaseService {
     private final IDeviceTypeRepository deviceTypeRepository;
     private final IModeRepository modeRepository;
 
-    public Device findDeviceById(int id) {
-        return deviceRepository.findById(id).orElseThrow(NoResultException::new);
+    public OutputDeviceDTO findDeviceDTO(int id) {
+        return new OutputDeviceDTO(
+                deviceRepository.findById(id)
+                        .orElseThrow(NoResultException::new));
+    }
+
+    public Device findDevice(int id) {
+        return deviceRepository.findById(id)
+                .orElseThrow(NoResultException::new);
     }
 
     public DeviceType findDeviceTypeByName(String name) {
@@ -39,42 +55,47 @@ public class DatabaseService {
         return deviceRepository.existsById(id);
     }
 
-    public List<Device> findAllDevices() {
-        return deviceRepository.findAll();
+    public List<OutputDeviceDTO> findAllDeviceDTOs() {
+        return deviceRepository.findAll()
+                .stream().map(OutputDeviceDTO::new)
+                .collect(Collectors.toList());
     }
 
     public List<DeviceType> findAllDeviceTypes() {
         return deviceTypeRepository.findAll();
     }
 
-    public DeviceData findLastDataOfDevice(int id) {
-        return deviceDataRepository.findDeviceDataById(id).stream().findFirst()
+    public DeviceData findLastDataOfDeviceByIdAndDataType(int id, String dataType) {
+        Pageable sortedByName = PageRequest.of(0, 1, Sort.Direction.DESC);
+        return deviceDataRepository.findDeviceDataByIdAndType(id, dataType, sortedByName).stream().findFirst()
                 .orElseThrow(NoResultException::new);
     }
 
-    public List<DeviceData> findAllDataOfDevice(int id) {
-        return deviceDataRepository.findDeviceDataById(id);
+    public Page<DeviceData> findDataOfDeviceByIdAndDataType(int id, String dataType, int page, int size) {
+        Pageable sortedByName = PageRequest.of(page, size, Sort.Direction.DESC);
+        return deviceDataRepository.findDeviceDataByIdAndType(id, dataType, sortedByName);
     }
 
     @Transactional
-    public void saveDeviceData(int id, String data) {
+    public void saveDeviceData(int id, String type, String data) {
         DeviceDataId deviceDataId = new DeviceDataId();
         deviceDataId.setDeviceId(id);
         deviceDataId.setDate(LocalDateTime.now());
 
         DeviceData deviceData = new DeviceData();
         deviceData.setId(deviceDataId);
+        deviceData.setDataType(type);
         deviceData.setData(data);
         deviceDataRepository.save(deviceData);
     }
 
     @Transactional
-    public Device saveDevice(DeviceDTO deviceDTO) {
+    public OutputDeviceDTO saveDevice(DeviceDTO deviceDTO) {
         Device device = new Device();
         device.setName(deviceDTO.getName());
         device.setLocation(deviceDTO.getLocation());
-        device.setDeviceType(deviceDTO.getDeviceType().getType());
-        return deviceRepository.save(device);
+        device.setDeviceType(deviceDTO.getDeviceType().getType()); //Not working
+        return new OutputDeviceDTO(deviceRepository.save(device));
     }
 
     @Transactional
@@ -83,24 +104,12 @@ public class DatabaseService {
     }
 
     @Transactional
-    public Device updateDevice(int id, DeviceDTO deviceDTO) {
+    public OutputDeviceDTO updateDevice(int id, DeviceDTO deviceDTO) {
         Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
         device.setName(deviceDTO.getName());
         device.setLocation(deviceDTO.getLocation());
         device.setDeviceType(deviceDTO.getDeviceType().getType());
-        return device;
-    }
-
-    @Transactional
-    public void updateDeviceTimestamp(int id, LocalDateTime date) {
-        Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
-        device.setLastTimestamp(date);
-    }
-
-    @Transactional
-    public void updateDeviceStatus(int id, String status) {
-        Device device = deviceRepository.findById(id).orElseThrow(NoResultException::new);
-        device.setState(status);
+        return new OutputDeviceDTO(device);
     }
 
     @Transactional
