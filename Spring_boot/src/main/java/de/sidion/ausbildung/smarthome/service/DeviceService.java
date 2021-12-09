@@ -2,7 +2,6 @@ package de.sidion.ausbildung.smarthome.service;
 
 import de.sidion.ausbildung.smarthome.database.entity.Device;
 import de.sidion.ausbildung.smarthome.database.entity.DeviceType;
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.dto.LEDModeDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;

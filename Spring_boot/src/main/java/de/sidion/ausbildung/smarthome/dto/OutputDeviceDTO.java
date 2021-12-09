@@ -5,23 +5,25 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class OutputDeviceDTO {
-    public OutputDeviceDTO(Device device) {
+    public OutputDeviceDTO(Device device, LocalDateTime lastSeen, String state) {
         this.id = device.getId();
         this.name = device.getName();
         this.location = device.getLocation();
         this.deviceType = device.getDeviceType().getName();
-        this.timestamp = 1;
-        this.data = "";
+        this.lastSeen = lastSeen;
+        this.state = state;
     }
 
     private int id;
     private String name;
     private String location;
     private String deviceType;
-    private long timestamp;
-    private String data;
+    private LocalDateTime lastSeen;
+    private String state;
 }

@@ -25,5 +25,5 @@ public class DeviceDTO {
     @Pattern(regexp = "^[\\S]+$")
     private String location;
 
-    private DeviceTypeDTO deviceType;
+    private String deviceType;
 }

@@ -1,7 +1,7 @@
 package de.sidion.ausbildung.smarthome.rest;
 
 import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
+import de.sidion.ausbildung.smarthome.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.dto.DeviceDataDTO;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,8 +24,9 @@ public class DeviceDataController {
     @GetMapping("/{id}/{selector}")
     public ResponseEntity<DeviceDataDTO> getCurrentDataOfDevice(@PathVariable("id") int id,
                                                                 @PathVariable("selector") String selector) {
-        final DeviceData data = databaseService.findLastDataOfDeviceByIdAndDataType(id, selector);
-        return responseService.createSendResponse(HttpStatus.OK, new DeviceDataDTO(data));
+        final Optional<DeviceData> data = databaseService.findLastDataOfDeviceByIdAndDataType(id, selector);
+        DeviceDataDTO deviceDataDTO = data.map(DeviceDataDTO::new).orElse(null);
+        return responseService.createSendResponse(HttpStatus.OK, deviceDataDTO);
     }
 
     @GetMapping("/{id}/history/{selector}")

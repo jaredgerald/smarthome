@@ -1,7 +1,7 @@
 package de.sidion.ausbildung.smarthome.rest;
 
 import de.sidion.ausbildung.smarthome.database.entity.DeviceType;
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
+import de.sidion.ausbildung.smarthome.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.dto.DeviceTypeDTO;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;

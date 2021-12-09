@@ -1,6 +1,6 @@
 package de.sidion.ausbildung.smarthome.mqtt;
 
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
+import de.sidion.ausbildung.smarthome.service.DatabaseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.integration.mqtt.support.MqttHeaders;
 import org.springframework.messaging.Message;

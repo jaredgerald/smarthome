@@ -1,7 +1,7 @@
 package de.sidion.ausbildung.smarthome.rest;
 
 import de.sidion.ausbildung.smarthome.database.entity.DeviceData;
-import de.sidion.ausbildung.smarthome.database.service.DatabaseService;
+import de.sidion.ausbildung.smarthome.service.DatabaseService;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,10 +26,13 @@ public class SpeakerRemoteController {
     @PostMapping("/{id}")
     @PreAuthorize("@deviceService.isDeviceString(#id, 'SPEAKER_REMOTE')")
     public ResponseEntity<Object> changeActiveState(@PathVariable("id") int id) {
+        final Optional<DeviceData> data = databaseService.findLastDataOfDeviceByIdAndDataType(id, "STATE");
 
-        final DeviceData data = databaseService.findLastDataOfDeviceByIdAndDataType(id, "state");
-
-        mqttService.sendCommand(id, (data.getData().equals("off")) ? "on" : "off");
+        String command = "off";
+        if (data.isPresent()) {
+            command = (data.get().getData().equals("off")) ? "on" : "off";
+        }
+        mqttService.sendCommand(id, command);
 
         return responseService.createSendResponse(HttpStatus.OK, null);
     }
