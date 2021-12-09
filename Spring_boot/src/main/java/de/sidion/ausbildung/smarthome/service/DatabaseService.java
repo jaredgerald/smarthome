@@ -69,7 +69,7 @@ public class DatabaseService {
     }
 
     public Page<DeviceData> findDataOfDeviceByIdAndDataType(int id, String dataType, int page, int size) {
-        Pageable sortedByName = PageRequest.of(page, size, Sort.Direction.DESC);
+        Pageable sortedByName = PageRequest.of(page, size);
         return deviceDataRepository.findDeviceDataByIdAndType(id, dataType, sortedByName);
     }
 

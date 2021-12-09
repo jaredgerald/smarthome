@@ -22,8 +22,8 @@ public class DeviceDataController {
     private final ResponseService responseService;
 
     @GetMapping("/{id}/{selector}")
-    public ResponseEntity<DeviceDataDTO> getCurrentDataOfDevice(@PathVariable("id") int id,
-                                                                @PathVariable("selector") String selector) {
+    public ResponseEntity<DeviceDataDTO> getLastDataOfDevice(@PathVariable("id") int id,
+                                                             @PathVariable("selector") String selector) {
         final Optional<DeviceData> data = databaseService.findLastDataOfDeviceByIdAndDataType(id, selector);
         DeviceDataDTO deviceDataDTO = data.map(DeviceDataDTO::new).orElse(null);
         return responseService.createSendResponse(HttpStatus.OK, deviceDataDTO);
