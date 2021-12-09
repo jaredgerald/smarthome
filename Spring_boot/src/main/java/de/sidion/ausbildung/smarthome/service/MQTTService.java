@@ -1,5 +1,7 @@
 package de.sidion.ausbildung.smarthome.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.sidion.ausbildung.smarthome.dto.LEDModeDTO;
 import de.sidion.ausbildung.smarthome.mqtt.MQTTGateway;
 import lombok.AllArgsConstructor;
@@ -14,8 +16,11 @@ public class MQTTService {
 
     private final MQTTGateway gateway;
 
-    public void sendLightMode(int id, LEDModeDTO mode) {
-        sendCommand(id, mode.toString());
+    public void sendLightMode(int id, LEDModeDTO mode) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String modeJson = objectMapper.writeValueAsString(mode);
+
+        sendCommand(id, modeJson);
     } //Async response
 
     public void sendDeviceRequest(int id) {

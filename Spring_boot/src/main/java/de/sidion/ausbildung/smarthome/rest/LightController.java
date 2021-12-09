@@ -1,5 +1,6 @@
 package de.sidion.ausbildung.smarthome.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import de.sidion.ausbildung.smarthome.dto.LEDModeDTO;
 import de.sidion.ausbildung.smarthome.service.MQTTService;
 import de.sidion.ausbildung.smarthome.service.ResponseService;
@@ -22,7 +23,7 @@ public class LightController {
     @PreAuthorize("@deviceService.isDeviceString(#id, 'LIGHT', 'PROGRAMMABLE_LIGHT') && " +
             "@deviceService.isDeviceModeValid(#id, #mode)")
     public ResponseEntity<Object> setLightMode(@PathVariable("id") int id,
-                                               @RequestBody @Valid LEDModeDTO mode) {
+                                               @RequestBody @Valid LEDModeDTO mode) throws JsonProcessingException {
         mqttService.sendLightMode(id, mode);
         return responseService.createSendResponse(HttpStatus.OK, null);
     }

@@ -9,12 +9,10 @@ import de.sidion.ausbildung.smarthome.database.repository.IDeviceRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IDeviceTypeRepository;
 import de.sidion.ausbildung.smarthome.database.repository.IModeRepository;
 import de.sidion.ausbildung.smarthome.dto.DeviceDTO;
-import de.sidion.ausbildung.smarthome.dto.DeviceTypeDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
