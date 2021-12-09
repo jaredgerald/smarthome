@@ -19,7 +19,7 @@ public class TVRemoteController {
     private final ResponseService responseService;
 
     @PostMapping("/{id}/{command}")
-    @PreAuthorize("@deviceService.isDeviceString(#id, 'TV')")
+    @PreAuthorize("@deviceService.isDeviceString(#id, 'TV_REMOTE')")
     public ResponseEntity<Object> publishCommand(@PathVariable("id") int id,
                                                  @PathVariable("command") String command) {
         mqttService.sendCommand(id, command);

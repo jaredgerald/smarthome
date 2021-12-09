@@ -1,9 +1,11 @@
 package de.sidion.ausbildung.smarthome.database.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Table(name = "device", indexes = {
         @Index(name = "device_un", columnList = "name", unique = true)
@@ -28,8 +30,4 @@ public class Device {
     @ManyToOne(optional = false)
     @JoinColumn(name = "device_type_id", nullable = false)
     private DeviceType deviceType;
-
-    @OneToMany
-    @JoinColumn(name = "device_id") //Look if necessary
-    private List<DeviceData> deviceData;
 }
